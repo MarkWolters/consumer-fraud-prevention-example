@@ -27,7 +27,7 @@ The application reads from a sample data set and then detect actual fraudulent c
 
 To build the jar file run:
 
-	mvn clean compile 
+	mvn clean package 
 
 To start the processor run
 
