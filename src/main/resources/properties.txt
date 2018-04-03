@@ -1,0 +1,4 @@
+trainingDir=/Users/markwolters/Dev/repos/consumer-fraud-prevention-example/resources/training
+testDir=/Users/markwolters/Dev/repos/consumer-fraud-prevention-example/resources/test
+batchDuration=1
+numFeatures=3
