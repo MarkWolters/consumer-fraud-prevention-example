@@ -43,14 +43,17 @@ object LogisticRegressionProcessor {
     val batchDuration = prop.getProperty("batchDuration").toLong
     val numFeatures = prop.getProperty("numFeatures").toInt
 
-    val conf = new SparkConf().setMaster("local").setAppName("LogisticRegressionProcessor")
+    val conf = new SparkConf().setAppName("LogisticRegressionProcessor")
+      //.set("spark.cassandra.connection.host", "127.0.0.1")
+      .setMaster("spark://127.0.0.1:7077")
     val ssc = new StreamingContext(conf, Seconds(batchDuration))
 
     /**
       * Next map the training data and the test data to DStreams of LabeledPoint Objects
       */
-    val trainingData = ssc.textFileStream(trainingDir).map(LabeledPoint.parse)
+    val trainingData = ssc.textFileStream(trainingDir).map(LabeledPoint.parse).cache()
     val testData = ssc.textFileStream(testDir).map(LabeledPoint.parse)
+    
     /**
       * Training data will have average price included already in order to train the processor
       * to find transactions where the cost is > 2 SD from the average.  RT transactions
@@ -61,16 +64,13 @@ object LogisticRegressionProcessor {
       * Checks could also be done based on location vs. where the card has been used in the past,
       * merchant category, etc. but we're keeping this example simple.
       */
-    //val rawTestData = ssc.textFileStream(testDir).flatMap(_.split("\n"))
-    //var account_no = ""
-    //var testData = rawTestData.transform()
 
     //val transaction_history = ssc.cassandraTable("transactions", "credit_card_transactions").select("*")
     //  .where("account_no = ?", account_no)
     val model = new StreamingLogisticRegressionWithSGD()
       .setInitialWeights(Vectors.zeros(numFeatures))
-
     model.trainOn(trainingData)
+
     /**
       * Make a prediction and write results to DSE
       */
@@ -78,7 +78,7 @@ object LogisticRegressionProcessor {
 
     ssc.start()
     ssc.awaitTermination()
-
+    //ssc.stop()
   }
 
 }
